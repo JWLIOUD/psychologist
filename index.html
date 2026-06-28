@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LIFF 轉 Google 表單模式驗證</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+      :root {
+        --bg: #f4f7f6;
+        --panel: #ffffff;
+        --ink: #1f2933;
+        --muted: #64748b;
+        --line: #d9e2ec;
+        --accent: #0f766e;
+        --warn: #9a3412;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Segoe UI", "Noto Sans TC", system-ui, sans-serif;
+      }
+
+      main {
+        width: min(720px, 100%);
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .status {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 150px minmax(0, 1fr);
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .row span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .row strong {
+        overflow-wrap: anywhere;
+      }
+
+      a,
+      button {
+        width: fit-content;
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        padding: 10px 16px;
+        background: var(--accent);
+        color: #ffffff;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .secondary {
+        background: #ffffff;
+        color: var(--accent);
+      }
+
+      .warn {
+        color: var(--warn);
+      }
+
+      code {
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: #eef2f7;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>LIFF 轉 Google 表單模式驗證</h1>
+      <p>
+        此頁是純靜態頁，不呼叫本機伺服器。正式放到 HTTPS 靜態主機後，LINE LIFF 可取得使用者
+        userId，並組成 Google 表單預填連結。
+      </p>
+
+      <section class="status" id="status">
+        <div class="row">
+          <span>狀態</span>
+          <strong>初始化中...</strong>
+        </div>
+      </section>
+
+      <button class="secondary" id="mock-button" type="button">不用 LINE，先用測試 userId 產生連結</button>
+      <a id="form-link" href="#" target="_blank" rel="noopener" hidden>開啟已預填 Google 表單</a>
+    </main>
+
+    <script>
+      const CONFIG = {
+        liffId: "請填入你的 LIFF ID",
+        googleFormBaseUrl: "請填入 Google Form formResponse 或 viewform 網址",
+        lineUserIdEntryId: "entry.請填入欄位ID",
+        displayNameEntryId: "entry.請填入欄位ID",
+        autoRedirect: false,
+      };
+
+      const params = new URLSearchParams(location.search);
+      const runtimeConfig = {
+        liffId: params.get("liff_id") || CONFIG.liffId,
+        googleFormBaseUrl: params.get("form_url") || CONFIG.googleFormBaseUrl,
+        lineUserIdEntryId: params.get("line_entry") || CONFIG.lineUserIdEntryId,
+        displayNameEntryId: params.get("name_entry") || CONFIG.displayNameEntryId,
+        autoRedirect: params.get("redirect") === "1" || CONFIG.autoRedirect,
+      };
+
+      const status = document.querySelector("#status");
+      const link = document.querySelector("#form-link");
+      const mockButton = document.querySelector("#mock-button");
+
+      function renderStatus(rows) {
+        status.innerHTML = rows
+          .map(([label, value, className = ""]) => `
+            <div class="row">
+              <span>${escapeHtml(label)}</span>
+              <strong class="${className}">${escapeHtml(value)}</strong>
+            </div>
+          `)
+          .join("");
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function isConfigured() {
+        return (
+          runtimeConfig.liffId &&
+          !runtimeConfig.liffId.includes("請填入") &&
+          runtimeConfig.googleFormBaseUrl &&
+          !runtimeConfig.googleFormBaseUrl.includes("請填入") &&
+          runtimeConfig.lineUserIdEntryId &&
+          !runtimeConfig.lineUserIdEntryId.includes("請填入")
+        );
+      }
+
+      function buildGoogleFormUrl(profile) {
+        const url = new URL(runtimeConfig.googleFormBaseUrl);
+        url.searchParams.set(runtimeConfig.lineUserIdEntryId, profile.userId);
+        if (runtimeConfig.displayNameEntryId && !runtimeConfig.displayNameEntryId.includes("請填入")) {
+          url.searchParams.set(runtimeConfig.displayNameEntryId, profile.displayName || "");
+        }
+        return url.toString();
+      }
+
+      function showFormLink(profile, source) {
+        const formUrl = buildGoogleFormUrl(profile);
+        link.href = formUrl;
+        link.hidden = false;
+        renderStatus([
+          ["狀態", "已產生 Google 表單預填連結"],
+          ["來源", source],
+          ["LINE userId", profile.userId],
+          ["LINE 名稱", profile.displayName || "未取得"],
+          ["下一步", runtimeConfig.autoRedirect ? "即將自動前往 Google 表單" : "請按下方按鈕開啟表單"],
+        ]);
+        if (runtimeConfig.autoRedirect) location.href = formUrl;
+      }
+
+      async function start() {
+        if (!isConfigured()) {
+          renderStatus([
+            ["狀態", "尚未填入 LIFF / Google 表單設定", "warn"],
+            ["需要設定", "liffId、Google Form URL、LINE userId 欄位 entry id"],
+            ["測試方式", "可先按下方測試按鈕產生 mock userId 連結"],
+          ]);
+          return;
+        }
+
+        try {
+          await liff.init({ liffId: runtimeConfig.liffId });
+          if (!liff.isLoggedIn()) {
+            renderStatus([
+              ["狀態", "尚未登入 LINE，準備導向登入"],
+              ["LIFF ID", runtimeConfig.liffId],
+            ]);
+            liff.login();
+            return;
+          }
+          const profile = await liff.getProfile();
+          showFormLink(profile, "LIFF getProfile");
+        } catch (error) {
+          renderStatus([
+            ["狀態", "LIFF 初始化失敗", "warn"],
+            ["錯誤", error.message],
+            ["常見原因", "LIFF ID 錯誤、Endpoint URL 未設定、此頁不是 HTTPS、未在 LINE 環境開啟"],
+          ]);
+        }
+      }
+
+      mockButton.addEventListener("click", () => {
+        if (!runtimeConfig.googleFormBaseUrl || runtimeConfig.googleFormBaseUrl.includes("請填入")) {
+          renderStatus([
+            ["狀態", "缺少 Google 表單網址", "warn"],
+            ["請補", "googleFormBaseUrl 或網址參數 form_url"],
+          ]);
+          return;
+        }
+        showFormLink(
+          {
+            userId: "U_TEST_LINE_USER_ID_001",
+            displayName: "測試使用者",
+          },
+          "mock profile"
+        );
+      });
+
+      start();
+    </script>
+  </body>
+</html>
