@@ -3,16 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LIFF 轉 Google 表單模式驗證</title>
+    <title>初談表單來源確認</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
       :root {
-        --bg: #f4f7f6;
+        --bg: #f5f7f4;
         --panel: #ffffff;
-        --ink: #1f2933;
-        --muted: #64748b;
-        --line: #d9e2ec;
+        --ink: #21302b;
+        --muted: #66756f;
+        --line: #dbe5df;
+        --soft: #edf5f1;
         --accent: #0f766e;
+        --accent-strong: #0b5d56;
+        --warm: #f6efe4;
         --warn: #9a3412;
       }
 
@@ -25,48 +28,89 @@
         min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 24px;
-        background: var(--bg);
+        padding: 22px;
+        background:
+          linear-gradient(180deg, rgba(246, 239, 228, 0.72), rgba(245, 247, 244, 0.88)),
+          var(--bg);
         color: var(--ink);
         font-family: "Segoe UI", "Noto Sans TC", system-ui, sans-serif;
       }
 
       main {
-        width: min(720px, 100%);
+        width: min(760px, 100%);
         display: grid;
-        gap: 16px;
-        padding: 22px;
+        gap: 18px;
+        padding: clamp(20px, 4vw, 34px);
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 8px;
         background: var(--panel);
-        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 18px 45px rgba(33, 48, 43, 0.1);
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        padding: 5px 10px;
+        border: 1px solid #bdd8ce;
+        border-radius: 999px;
+        background: var(--soft);
+        color: var(--accent-strong);
+        font-size: 13px;
+        font-weight: 700;
       }
 
       h1 {
         margin: 0;
-        font-size: 22px;
+        font-size: clamp(24px, 4vw, 34px);
+        letter-spacing: 0;
       }
 
       p {
         margin: 0;
         color: var(--muted);
-        line-height: 1.7;
+        line-height: 1.75;
+      }
+
+      .lead {
+        max-width: 66ch;
+        font-size: 16px;
+      }
+
+      .notice,
+      .status,
+      .services {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfb;
+      }
+
+      .notice {
+        display: grid;
+        gap: 8px;
+        padding: 14px 16px;
+        background: var(--warm);
+      }
+
+      .notice strong,
+      .services strong {
+        color: var(--ink);
       }
 
       .status {
         display: grid;
-        gap: 8px;
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #f8fafc;
+        gap: 0;
+        overflow: hidden;
       }
 
       .row {
         display: grid;
         grid-template-columns: 150px minmax(0, 1fr);
-        gap: 10px;
-        padding: 8px 0;
+        gap: 12px;
+        padding: 12px 14px;
         border-bottom: 1px solid var(--line);
       }
 
@@ -81,10 +125,19 @@
 
       .row strong {
         overflow-wrap: anywhere;
+        font-size: 14px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
       }
 
       a,
       button {
+        min-height: 42px;
         width: fit-content;
         border: 1px solid var(--accent);
         border-radius: 8px;
@@ -102,34 +155,115 @@
         color: var(--accent);
       }
 
+      .services {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+      }
+
+      .service-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .service-item {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .service-item span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .fine-print {
+        font-size: 13px;
+      }
+
       .warn {
         color: var(--warn);
       }
 
-      code {
-        padding: 2px 5px;
-        border-radius: 5px;
-        background: #eef2f7;
+      @media (max-width: 680px) {
+        body {
+          padding: 12px;
+        }
+
+        main {
+          padding: 18px;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+
+        .service-grid {
+          grid-template-columns: 1fr;
+        }
+
+        a,
+        button {
+          width: 100%;
+        }
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>LIFF 轉 Google 表單模式驗證</h1>
-      <p>
-        此頁是純靜態頁，不呼叫本機伺服器。正式放到 HTTPS 靜態主機後，LINE LIFF 可取得使用者
-        userId，並組成 Google 表單預填連結。
-      </p>
+      <header>
+        <div class="eyebrow">LINE 初談表單</div>
+        <h1>正在為你開啟初談表單</h1>
+        <p class="lead">
+          我們會先確認這份表單來自哪一個 LINE 對話，協助行政人員把表單與後續聯繫正確連在一起，減少重複詢問與資料對不上的情況。
+        </p>
+      </header>
 
-      <section class="status" id="status">
+      <section class="notice" aria-label="資料使用說明">
+        <strong>這個轉跳頁會讀取你的 LINE 識別碼與 LINE 顯示名稱。</strong>
+        <p>
+          LINE 識別碼只用於確認表單來源與後續聯繫，不會顯示在對外訊息中。LINE 顯示名稱會自動帶入表單，若名稱不正確，你可以在表單中自行修改。
+        </p>
+      </section>
+
+      <section class="status" id="status" aria-live="polite">
         <div class="row">
-          <span>狀態</span>
-          <strong>初始化中...</strong>
+          <span>目前狀態</span>
+          <strong>正在確認 LINE 來源...</strong>
         </div>
       </section>
 
-      <button class="secondary" id="mock-button" type="button">不用 LINE，先用測試 userId 產生連結</button>
-      <a id="form-link" href="#" target="_blank" rel="noopener" hidden>開啟已預填 Google 表單</a>
+      <div class="actions">
+        <a id="form-link" href="#" rel="noopener" hidden>立即開啟表單</a>
+        <button class="secondary" id="mock-button" type="button">測試預填連結</button>
+      </div>
+
+      <section class="services" aria-label="諮商服務簡介">
+        <strong>我們提供溫暖、簡約、透明的初談與諮商安排。</strong>
+        <div class="service-grid">
+          <div class="service-item">
+            初談協助
+            <span>先了解你的需求、期待與適合的服務方向。</span>
+          </div>
+          <div class="service-item">
+            預約安排
+            <span>由真人行政確認時間，送出表單不代表預約成立。</span>
+          </div>
+          <div class="service-item">
+            安心溝通
+            <span>我們會盡量用清楚、不造成壓力的方式說明流程。</span>
+          </div>
+        </div>
+        <p class="fine-print">
+          若你目前有立即安全風險，請優先聯繫 119、110 或前往就近急診。LINE 與表單不適合處理立即危急狀況。
+        </p>
+      </section>
     </main>
 
     <script>
@@ -139,6 +273,7 @@
         lineUserIdEntryId: "entry.880824823",
         displayNameEntryId: "entry.1029971539",
         autoRedirect: true,
+        redirectDelayMs: 2800,
       };
 
       const params = new URLSearchParams(location.search);
@@ -147,7 +282,8 @@
         googleFormBaseUrl: params.get("form_url") || CONFIG.googleFormBaseUrl,
         lineUserIdEntryId: params.get("line_entry") || CONFIG.lineUserIdEntryId,
         displayNameEntryId: params.get("name_entry") || CONFIG.displayNameEntryId,
-        autoRedirect: params.get("redirect") === "1" || CONFIG.autoRedirect,
+        autoRedirect: params.get("redirect") === "0" ? false : params.get("redirect") === "1" || CONFIG.autoRedirect,
+        redirectDelayMs: Number(params.get("delay_ms") || CONFIG.redirectDelayMs),
       };
 
       const status = document.querySelector("#status");
@@ -199,20 +335,24 @@
         link.href = formUrl;
         link.hidden = false;
         renderStatus([
-          ["狀態", "已產生 Google 表單預填連結"],
-          ["來源", source],
-          ["LINE userId", profile.userId],
+          ["目前狀態", "已確認 LINE 來源"],
+          ["資料用途", "用於表單來源綁定與後續聯繫"],
           ["LINE 名稱", profile.displayName || "未取得"],
-          ["下一步", runtimeConfig.autoRedirect ? "即將自動前往 Google 表單" : "請按下方按鈕開啟表單"],
+          ["下一步", runtimeConfig.autoRedirect ? "即將自動開啟初談表單" : "請按下方按鈕開啟表單"],
+          ["確認方式", source],
         ]);
-        if (runtimeConfig.autoRedirect) location.href = formUrl;
+        if (runtimeConfig.autoRedirect) {
+          window.setTimeout(() => {
+            location.href = formUrl;
+          }, Math.max(runtimeConfig.redirectDelayMs, 0));
+        }
       }
 
       async function start() {
         if (!isConfigured()) {
           renderStatus([
-            ["狀態", "尚未填入 LIFF / Google 表單設定", "warn"],
-            ["需要設定", "liffId、Google Form URL、LINE userId 欄位 entry id"],
+            ["目前狀態", "尚未完成表單設定", "warn"],
+            ["需要設定", "LIFF ID、Google Form URL、LINE userId 欄位 entry id"],
             ["測試方式", "可先按下方測試按鈕產生 mock userId 連結"],
           ]);
           return;
@@ -222,19 +362,19 @@
           await liff.init({ liffId: runtimeConfig.liffId });
           if (!liff.isLoggedIn()) {
             renderStatus([
-              ["狀態", "尚未登入 LINE，準備導向登入"],
-              ["LIFF ID", runtimeConfig.liffId],
+              ["目前狀態", "正在開啟 LINE 登入確認"],
+              ["說明", "登入後才能確認這份表單來自哪一個 LINE 對話"],
             ]);
             liff.login();
             return;
           }
           const profile = await liff.getProfile();
-          showFormLink(profile, "LIFF getProfile");
+          showFormLink(profile, "LINE LIFF profile");
         } catch (error) {
           renderStatus([
-            ["狀態", "LIFF 初始化失敗", "warn"],
+            ["目前狀態", "LINE 來源確認失敗", "warn"],
             ["錯誤", error.message],
-            ["常見原因", "LIFF ID 錯誤、Endpoint URL 未設定、此頁不是 HTTPS、未在 LINE 環境開啟"],
+            ["建議", "請回到 LINE 官方帳號重新點選表單連結，或改由行政提供表單連結。"],
           ]);
         }
       }
@@ -242,7 +382,7 @@
       mockButton.addEventListener("click", () => {
         if (!runtimeConfig.googleFormBaseUrl || runtimeConfig.googleFormBaseUrl.includes("請填入")) {
           renderStatus([
-            ["狀態", "缺少 Google 表單網址", "warn"],
+            ["目前狀態", "缺少 Google 表單網址", "warn"],
             ["請補", "googleFormBaseUrl 或網址參數 form_url"],
           ]);
           return;
@@ -252,7 +392,7 @@
             userId: "U_TEST_LINE_USER_ID_001",
             displayName: "測試使用者",
           },
-          "mock profile"
+          "測試資料"
         );
       });
 
