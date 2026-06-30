@@ -270,8 +270,10 @@
       const CONFIG = {
         liffId: "2010533259-byxkz7u4",
         googleFormBaseUrl: "https://docs.google.com/forms/d/e/1FAIpQLScE6gkDi9fhMsrsgrqzXROtYXimV7vw-2dclgx10HJyITXWAQ/viewform",
-        lineUserIdEntryId: "entry.1874919458",
-        displayNameEntryId: "entry.1850947092",
+        lineUserIdEntryId: "entry.2097351982",
+        displayNameEntryId: "entry.1764444658",
+        systemSourceEntryId: "entry.192830720",
+        systemSourceValue: "LINE_RICH_MENU_INTAKE_V2",
         autoRedirect: true,
         redirectDelayMs: 2800,
       };
@@ -282,6 +284,8 @@
         googleFormBaseUrl: params.get("form_url") || CONFIG.googleFormBaseUrl,
         lineUserIdEntryId: params.get("line_entry") || CONFIG.lineUserIdEntryId,
         displayNameEntryId: params.get("name_entry") || CONFIG.displayNameEntryId,
+        systemSourceEntryId: params.get("source_entry") || CONFIG.systemSourceEntryId,
+        systemSourceValue: params.get("source_value") || CONFIG.systemSourceValue,
         autoRedirect: params.get("redirect") === "0" ? false : params.get("redirect") === "1" || CONFIG.autoRedirect,
         redirectDelayMs: Number(params.get("delay_ms") || CONFIG.redirectDelayMs),
       };
@@ -326,6 +330,9 @@
         url.searchParams.set(runtimeConfig.lineUserIdEntryId, profile.userId);
         if (runtimeConfig.displayNameEntryId && !runtimeConfig.displayNameEntryId.includes("請填入")) {
           url.searchParams.set(runtimeConfig.displayNameEntryId, profile.displayName || "");
+        }
+        if (runtimeConfig.systemSourceEntryId && !runtimeConfig.systemSourceEntryId.includes("請填入")) {
+          url.searchParams.set(runtimeConfig.systemSourceEntryId, runtimeConfig.systemSourceValue || "LINE_RICH_MENU_INTAKE");
         }
         return url.toString();
       }
